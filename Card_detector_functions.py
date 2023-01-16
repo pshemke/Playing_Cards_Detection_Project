@@ -67,13 +67,19 @@ def preprocess_frame(frame):
 
 def find_card(pre_processed_frame):
     
-    dummy, contours, hier = cv2.findCoutours(pre_processed_frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    _, contours, hierarchy = cv2.findCoutours(pre_processed_frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     
     sort = sorted(range(len(contours)), key= lambda i : cv2.contourArea(contours[i]), reverse = True)     #sort finded contours
     
     #if there is no countours finded, do nothing
-    
     if len(contours) == 0:
         return [],[]
     
+    #otherwise, process finded contours
+    contours_sort = []
+    hierarchy_sort = []
+    
+    contours_is_card = np.zeros(len(contours))
+    
+    #now insert sorted list into free 
     
