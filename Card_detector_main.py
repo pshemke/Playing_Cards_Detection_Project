@@ -27,8 +27,8 @@ video_stream = Video.Camera_stream((camera_width, camera_height), frames_per_sec
 time.sleep(10)
 
 # load train rank and suit images
-tranin_ranks = Card_detector_functions.load_ranks('/Card_image/')
-train_suits = Card_detector_functions.load_suits('/Card_image/')
+tranin_ranks = Card_detector_functions.load_ranks('/Card_Imgs/')
+train_suits = Card_detector_functions.load_suits('/Card_Imgs/')
 
 '''
     MAIN LOOP
@@ -41,4 +41,9 @@ while quit_cam == 0:
     #take last frame from camera
     cur_image = video_stream.read() 
     
+    #starting timer for calculating frame_rate
+    timer1 = cv2.getTickCount()
     
+    pre_processed_card = Card_detector_functions.preprocess_frame(cur_image)
+    
+    count_sort, count_is_card= Card_detector_functions.find_card(pre_processed_card)
