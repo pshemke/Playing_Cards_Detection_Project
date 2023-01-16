@@ -24,3 +24,12 @@ freq = cv2.getTickFrequency()
 # load train rank and suit images
 tranin_ranks = Card_detector_functions.load_ranks('/Card_image/')
 train_suits = Card_detector_functions.load_suits('/Card_image/')
+
+'''
+    MAIN LOOP
+'''
+
+quit_cam = 0
+
+while quit_cam == 0:
+    pass
