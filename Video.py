@@ -8,12 +8,12 @@ from threading import Thread
 class Camera_stream:
     def __init__(self, res=(640, 480), framerate = 30, src=0):
         self.stream = cv2.VideoCapture(src)
-        ret = self.stream.set(3, res[0])
-        rey = self.stream.set(4, res[1])
+        self.stream.set(3, res[0])
+        self.stream.set(4, res[1])
         
-        self.frane = []
+        self.frame = []
         
-        (self.grabbed, self.frame) = self.stream.read()    #read first frame from strem
+        (self.grabbed, self.frame) = self.stream.read()    #read first frame from stream
         
         self.stopped = False #create var to possible stop the camera
         

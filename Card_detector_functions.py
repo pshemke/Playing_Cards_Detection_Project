@@ -96,16 +96,13 @@ def find_card(pre_processed_frame):
         3) have no parents
         4) have 4 corners
     '''
-    print("a")
     for i in range(len(contours_sort)):
         size = cv2.contourArea(contours_sort[i])
         retval = cv2.arcLength(contours_sort[i], True)
         approxima = cv2.approxPolyDP(contours_sort[i], 0.01*retval, True)
         
-        if((size > CARD_AREA_MIN) and (size < CARD_AREA_MAX)):
-            if hierarchy_sort[i][3] == -1:
-                if len(approxima) == 4:
-                    contours_is_card[i] = 1
+        if((size > CARD_AREA_MIN) and (size < CARD_AREA_MAX) and (hierarchy_sort[i][3] == -1) and (len(approxima) == 4)):
+            contours_is_card[i] = 1
     
-    return contours_sort, hierarchy_sort
+    return contours_sort, contours_is_card
     
