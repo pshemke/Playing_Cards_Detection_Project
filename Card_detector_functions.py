@@ -71,7 +71,7 @@ def preprocess_frame(frame):
 
 def find_card(pre_processed_frame):
     
-    _, contours, hierarchy = cv2.findCoutours(pre_processed_frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    _, contours, hierarchy = cv2.findContours(pre_processed_frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     
     sort = sorted(range(len(contours)), key= lambda i : cv2.contourArea(contours[i]), reverse = True)     #sort finded contours
     
