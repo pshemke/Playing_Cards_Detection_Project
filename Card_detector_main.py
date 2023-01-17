@@ -31,8 +31,8 @@ video_stream = Video.Camera_stream((camera_width, camera_height), frames_per_sec
 time.sleep(10)
 
 # load train rank and suit images
-tranin_ranks = Card_detector_functions.load_ranks('Card_Imgs/')
-train_suits = Card_detector_functions.load_suits('Card_Imgs/')
+#tranin_ranks = Card_detector_functions.load_ranks('Card_Imgs/')
+#train_suits = Card_detector_functions.load_suits('Card_Imgs/')
 
 '''
     MAIN LOOP
