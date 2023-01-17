@@ -11,12 +11,16 @@ import Card_detector_classes
 static variables
 '''
 #adaptive threshold
-bkg_threshold = 60
-card_threshold = 30
+BKG_TRESHOLD = 60
+CARD_THRESHOLD = 30
+
+#size of cards
+CARD_AREA_MIN = 120000
+CARD_AREA_MAX = 25000
 
 #width and height of corner, where importatnt data are
-corner_width = 32
-corner_height = 84
+CORNER_WIDTH = 32
+CORNER_HEIGHT = 84
 
 def load_ranks(path):
     train_ranks = []
@@ -59,7 +63,7 @@ def preprocess_frame(frame):
     #adaptive treshold
     img_weight, img_height = np.shape(frame)[:2]
     bkg_level = gray[int(img_height/100)][int(img_weight/2)]
-    threshold_level = bkg_level + bkg_threshold
+    threshold_level = bkg_level + BKG_TRESHOLD
     
     retval, threshold = cv2.threshold(blur, threshold_level, 255, cv2.THRESH_BINARY)
     
@@ -81,5 +85,27 @@ def find_card(pre_processed_frame):
     
     contours_is_card = np.zeros(len(contours))
     
-    #now insert sorted list into free 
+    #now insert sorted list into free table
+    for i in sort:
+        contours_sort.append(contours[i])
+        hierarchy_sort.append(hierarchy[0, i])
+        
+    '''now determine which contour is card by criteria
+        1) smaller area than max card size
+        2) bigger area than min card size
+        3) have no parents
+        4) have 4 corners
+    '''
+    print("a")
+    for i in range(len(contours_sort)):
+        size = cv2.contourArea(contours_sort[i])
+        retval = cv2.arcLength(contours_sort[i], True)
+        approxima = cv2.approxPolyDP(contours_sort[i], 0.01*retval, True)
+        
+        if((size > CARD_AREA_MIN) and (size < CARD_AREA_MAX)):
+            if hierarchy_sort[i][3] == -1:
+                if len(approxima) == 4:
+                    contours_is_card[i] = 1
+    
+    return contours_sort, hierarchy_sort
     
