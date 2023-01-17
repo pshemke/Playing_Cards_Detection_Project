@@ -69,6 +69,57 @@ def preprocess_frame(frame):
     
     return threshold
 
+def flattener(img, points, width, height):
+    temp_rectangle = np.zeros((4, 2), dtype= 'float32')
+    
+    points_sum = np.sum(points, axis= 2)
+    tl = points[np.argmin(points_sum)]
+    br = points[np.argmax(points_sum)]
+    
+    points_diff = np.diff(points, axis= -1)
+    tr = points[np.argmin(points_diff)]
+    bl = points[np.argmax(points_diff)]
+    
+    if(width <= 0.8*height):        #if card oriented vertically
+        temp_rectangle[0] = tl
+        temp_rectangle[1] = tr
+        temp_rectangle[2] = br
+        temp_rectangle[3] = bl  
+    elif(width >= 1.2*height):      #if card oriented horizontally
+        temp_rectangle[0] = bl
+        temp_rectangle[1] = tl
+        temp_rectangle[2] = tr
+        temp_rectangle[3] = br
+    else:                           #else if card is oriented diamon, we need to identyficate which point is which
+        if points[1][0][1] <= points[3][0][1]:
+            temp_rectangle[0] = points[1][0]    #top left
+            temp_rectangle[1] = points[0][0]    #top right
+            temp_rectangle[2] = points[3][0]    #bottom left
+            temp_rectangle[3] = points[2][0]    #bottom right
+        else:
+            temp_rectangle[0] = points[0][0]    #top left
+            temp_rectangle[1] = points[3][0]    #top right
+            temp_rectangle[2] = points[2][0]    #bottom left
+            temp_rectangle[3] = points[1][0]    #bottom right
+            
+    max_width = 200
+    max_height = 300
+    
+    #create destination array, calculate perspective to transform matrix
+    
+    destination = np.array([[0, 0], 
+                            [max_width - 1, 0], 
+                            [max_width - 1 ,max_height - 1], 
+                            [0, max_height - 1]], np.float32)
+    
+    M = cv2.getPerspectiveTransform(temp_rectangle, destination)
+
+    #create wrapped card image
+    wrap = cv2.wrapPerspective(img, M, (max_width, max_height))
+    wrap = cv2.cvtColor(wrap, cv2.COLOR_BGR2GRAY)
+    
+    return wrap
+
 def find_card(pre_processed_frame):
     
     contours, hierarchy = cv2.findContours(pre_processed_frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -105,4 +156,32 @@ def find_card(pre_processed_frame):
             contours_is_card[i] = 1
     
     return contours_sort, contours_is_card
+
+def process_card(contour, cur_image):
     
+    #inicjalize new instance of Query_card
+    querry_card = Card_detector_classes.Query_card()
+    
+    querry_card.contour = contour
+    
+    #find perimeter if card, use it to approximate corner points
+    retval = cv2.arcLength(contour, True)
+    approxima = cv2.approxPolyDP(contour, 0.01*retval, True)
+    points = np.float32(approxima)
+    querry_card.corner_pts = points
+    
+    #detect width and height
+    x, y, width, height = cv2.boundingRect(contour)
+    querry_card.width = width
+    querry_card.height = height
+    
+    
+    #find center of card by takink x, y and 4 corners
+    average = np.sum(points, axis=0)/len(points)
+    center_x = int(average[0][0])
+    center_y = int(average[0][1])
+    querry_card.center = [center_x, center_y]
+    
+    
+    #wrap card into 200x300 flat image using perspective transform
+    querry_card.wrap = flattener(image, points, width, height)

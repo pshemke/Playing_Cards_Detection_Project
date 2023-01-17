@@ -31,8 +31,8 @@ video_stream = Video.Camera_stream((camera_width, camera_height), frames_per_sec
 time.sleep(1)
 
 # load train rank and suit images
-#tranin_ranks = Card_detector_functions.load_ranks('Card_Imgs/')
-#train_suits = Card_detector_functions.load_suits('Card_Imgs/')
+tranin_ranks = Card_detector_functions.load_ranks('Card_Imgs/')
+train_suits = Card_detector_functions.load_suits('Card_Imgs/')
 
 '''
     MAIN LOOP
@@ -59,7 +59,7 @@ while quit_cam == 0:
         
         for i in range(len(contour_sort)):
             if(contour_is_card[i] == 1):
-                cards.append() #TODO
+                cards.append(Card_detector_functions.process_card(contour_sort[i], cur_image)) 
                 
                 '''
                     preprocess card funct #TODO
@@ -77,7 +77,7 @@ while quit_cam == 0:
             pass #TODO
     
     #display FPS in the corner
-    cv2.putText(cur_image, "FPS: " + str(int(frames_per_sec_calc)), (10, 26), font, 0.7, (255, 0, 255), cv2.LINE_AA)
+    cv2.putText(cur_image, "FPS: " + str(int(frames_per_sec_calc)), (10, 26), font, 1, (255, 0, 255), 1, cv2.LINE_AA)
     
     #display frame od the screen
     cv2.imshow("Card detector", cur_image)
