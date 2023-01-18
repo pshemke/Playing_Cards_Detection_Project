@@ -12,12 +12,12 @@ import Card_detector_classes
 static variables
 '''
 #adaptive threshold
-BKG_TRESHOLD = 0
+BKG_TRESHOLD = 60
 CARD_THRESHOLD = 30
 
 #size of cards
-CARD_AREA_MIN = 120000
-CARD_AREA_MAX = 25000
+CARD_AREA_MAX = 1200000
+CARD_AREA_MIN = 10000
 
 #width and height of corner, where importatnt data are
 CORNER_WIDTH = 32
@@ -63,8 +63,14 @@ def preprocess_frame(frame):
     
     #adaptive treshold
     img_weight, img_height = np.shape(frame)[:2]
-    bkg_level = gray[int(img_height/2)][int(img_weight/2)]
-    threshold_level = bkg_level + BKG_TRESHOLD
+    bkg_level = []
+    bkg_level.append(gray[int(img_height/2)][int(img_weight/2)])
+    bkg_level.append(gray[0][0])
+    bkg_level.append(gray[-1][0])
+    bkg_level.append(gray[0][-1])
+    bkg_level.append(gray[-1][-1])
+    
+    threshold_level = sum(bkg_level)/len(bkg_level) + BKG_TRESHOLD
     
     retval, threshold = cv2.threshold(blur, threshold_level, 255, cv2.THRESH_BINARY)
     
@@ -92,7 +98,7 @@ def flattener(img, points, width, height):
         temp_rectangle[2] = tr
         temp_rectangle[3] = br
     else:
-        if points[1][0][0] <= points[3][0][0]:  #else if card is oriented diamon, we need to identyficate which point is which
+        if points[1][0][0] >= points[3][0][0]:  #else if card is oriented diamon, we need to identyficate which point is which
             temp_rectangle[0] = points[1][0]    #top left
             temp_rectangle[1] = points[0][0]    #top right
             temp_rectangle[2] = points[3][0]    #bottom left
@@ -153,12 +159,13 @@ def find_card(pre_processed_frame):
         retval = cv2.arcLength(contours_sort[i], True)
         approxima = cv2.approxPolyDP(contours_sort[i], 0.01*retval, True)
 
-        '''
+        
         if((size > CARD_AREA_MIN) and (size < CARD_AREA_MAX) and (hierarchy_sort[i][3] == -1) and (len(approxima) == 4)):
             contours_is_card[i] = 1
         '''
         if((hierarchy_sort[i][3] == -1) and (len(approxima) == 4)):
             contours_is_card[i] = 1
+        '''
     
     return contours_sort, contours_is_card
 

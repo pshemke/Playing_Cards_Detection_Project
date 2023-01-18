@@ -26,8 +26,9 @@ freq = cv2.getTickFrequency()
 #define font
 font = cv2.FONT_HERSHEY_SIMPLEX #TODO (maybe if we want to change font)
 
-#start the camera
+#start the camera 0 for build in camera, 1 for USB camera
 video_stream = Video.Camera_stream((camera_width, camera_height), frames_per_sec_for_camera, 0).start()
+#video_stream = Video.Camera_stream((camera_width, camera_height), frames_per_sec_for_camera, 1).start()
 time.sleep(1)
 
 # load train rank and suit images
