@@ -48,19 +48,21 @@ while quit_cam == 0:
     #starting timer for calculating frame_rate
     timer1 = cv2.getTickCount()
     
-    pre_processed_card = Card_detector_functions.preprocess_frame(cur_image)
+    pre_processed_img = Card_detector_functions.preprocess_frame(cur_image)
+    cv2.imshow("Preprocessed frame", pre_processed_img)
     
-    contour_sort, contour_is_card= Card_detector_functions.find_card(pre_processed_card)
+    
+    contour_sort, contour_is_card= Card_detector_functions.find_card(pre_processed_img)
     
     #do if there are card countours
     if(len(contour_sort) != 0):
         cards = []
         c = 0
-        
         for i in range(len(contour_sort)):
             if(contour_is_card[i] == 1):
-                cards.append(Card_detector_functions.process_card(contour_sort[i], cur_image)) 
+                cards.append(Card_detector_functions.process_card(contour_sort[i], cur_image))
                 
+                cv2.imshow("Detected card", cards[-1].wrap)
                 '''
                     preprocess card funct #TODO
                     match card funct #TODO
@@ -71,10 +73,11 @@ while quit_cam == 0:
     
         #draw 
         if(len(cards) != 0):
-            '''
-                draw countours on cards (maybe dont need?) #TODO
-            '''
-            pass #TODO
+            temp_contour = []
+            for i in range(len(cards)):
+                temp_contour.append(cards[i].contour)
+            
+            cv2.drawContours(cur_image, temp_contour, -1, (255, 0, 0), 2)
     
     #display FPS in the corner
     cv2.putText(cur_image, "FPS: " + str(int(frames_per_sec_calc)), (10, 26), font, 1, (255, 0, 255), 1, cv2.LINE_AA)

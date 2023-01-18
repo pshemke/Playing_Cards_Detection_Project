@@ -8,7 +8,7 @@ import numpy as np
 '''
     Class for storing querry cards
 '''
-class Detected_card:
+class Query_card:
     def __init__(self):
         self.widh, self.height = 0, 0   #detected width and height
         self.countour = []              #describes countour of card

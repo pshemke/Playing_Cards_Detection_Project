@@ -1,5 +1,6 @@
 import cv2
 import time
+import sys
 
 
 import numpy as np
@@ -11,7 +12,7 @@ import Card_detector_classes
 static variables
 '''
 #adaptive threshold
-BKG_TRESHOLD = 60
+BKG_TRESHOLD = 0
 CARD_THRESHOLD = 30
 
 #size of cards
@@ -62,7 +63,7 @@ def preprocess_frame(frame):
     
     #adaptive treshold
     img_weight, img_height = np.shape(frame)[:2]
-    bkg_level = gray[int(img_height/100)][int(img_weight/2)]
+    bkg_level = gray[int(img_height/2)][int(img_weight/2)]
     threshold_level = bkg_level + BKG_TRESHOLD
     
     retval, threshold = cv2.threshold(blur, threshold_level, 255, cv2.THRESH_BINARY)
@@ -90,8 +91,8 @@ def flattener(img, points, width, height):
         temp_rectangle[1] = tl
         temp_rectangle[2] = tr
         temp_rectangle[3] = br
-    else:                           #else if card is oriented diamon, we need to identyficate which point is which
-        if points[1][0][1] <= points[3][0][1]:
+    else:
+        if points[1][0][0] <= points[3][0][0]:  #else if card is oriented diamon, we need to identyficate which point is which
             temp_rectangle[0] = points[1][0]    #top left
             temp_rectangle[1] = points[0][0]    #top right
             temp_rectangle[2] = points[3][0]    #bottom left
@@ -100,7 +101,7 @@ def flattener(img, points, width, height):
             temp_rectangle[0] = points[0][0]    #top left
             temp_rectangle[1] = points[3][0]    #top right
             temp_rectangle[2] = points[2][0]    #bottom left
-            temp_rectangle[3] = points[1][0]    #bottom right
+            temp_rectangle[3] = points[1][0]    #bottom right                           
             
     max_width = 200
     max_height = 300
@@ -115,7 +116,7 @@ def flattener(img, points, width, height):
     M = cv2.getPerspectiveTransform(temp_rectangle, destination)
 
     #create wrapped card image
-    wrap = cv2.wrapPerspective(img, M, (max_width, max_height))
+    wrap = cv2.warpPerspective(img, M, (max_width, max_height))
     wrap = cv2.cvtColor(wrap, cv2.COLOR_BGR2GRAY)
     
     return wrap
@@ -124,22 +125,22 @@ def find_card(pre_processed_frame):
     
     contours, hierarchy = cv2.findContours(pre_processed_frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     
-    sort = sorted(range(len(contours)), key= lambda i : cv2.contourArea(contours[i]), reverse = True)     #sort finded contours
+    sort = sorted(range(len(contours)), key=lambda i : cv2.contourArea(contours[i]),reverse=True)     #sort finded contours
     
     #if there is no countours finded, do nothing
     if len(contours) == 0:
-        return [],[]
+        return [], []
     
     #otherwise, process finded contours
     contours_sort = []
     hierarchy_sort = []
     
-    contours_is_card = np.zeros(len(contours))
+    contours_is_card = np.zeros(len(contours),dtype=int)
     
     #now insert sorted list into free table
     for i in sort:
         contours_sort.append(contours[i])
-        hierarchy_sort.append(hierarchy[0, i])
+        hierarchy_sort.append(hierarchy[0][i])
         
     '''now determine which contour is card by criteria
         1) smaller area than max card size
@@ -151,11 +152,60 @@ def find_card(pre_processed_frame):
         size = cv2.contourArea(contours_sort[i])
         retval = cv2.arcLength(contours_sort[i], True)
         approxima = cv2.approxPolyDP(contours_sort[i], 0.01*retval, True)
-        
+
+        '''
         if((size > CARD_AREA_MIN) and (size < CARD_AREA_MAX) and (hierarchy_sort[i][3] == -1) and (len(approxima) == 4)):
+            contours_is_card[i] = 1
+        '''
+        if((hierarchy_sort[i][3] == -1) and (len(approxima) == 4)):
             contours_is_card[i] = 1
     
     return contours_sort, contours_is_card
+
+# def find_card(thresh_image):
+#     """Finds all card-sized contours in a thresholded camera image.
+#     Returns the number of cards, and a list of card contours sorted
+#     from largest to smallest."""
+
+#     # Find contours and sort their indices by contour size
+#     cnts,hier = cv2.findContours(thresh_image,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+#     index_sort = sorted(range(len(cnts)), key=lambda i : cv2.contourArea(cnts[i]),reverse=True)
+
+#     # If there are no contours, do nothing
+#     if len(cnts) == 0:
+#         return [], []
+    
+#     # Otherwise, initialize empty sorted contour and hierarchy lists
+#     cnts_sort = []
+#     hier_sort = []
+#     cnt_is_card = np.zeros(len(cnts),dtype=int)
+
+#     # Fill empty lists with sorted contour and sorted hierarchy. Now,
+#     # the indices of the contour list still correspond with those of
+#     # the hierarchy list. The hierarchy array can be used to check if
+#     # the contours have parents or not.
+#     for i in index_sort:
+#         cnts_sort.append(cnts[i])
+#         hier_sort.append(hier[0][i])
+
+#     # Determine which of the contours are cards by applying the
+#     # following criteria: 1) Smaller area than the maximum card size,
+#     # 2), bigger area than the minimum card size, 3) have no parents,
+#     # and 4) have four corners
+
+#     for i in range(len(cnts_sort)):
+#         size = cv2.contourArea(cnts_sort[i])
+#         peri = cv2.arcLength(cnts_sort[i],True)
+#         approx = cv2.approxPolyDP(cnts_sort[i],0.01*peri,True)
+#         '''
+#         if ((size < CARD_MAX_AREA) and (size > CARD_MIN_AREA)
+#             and (hier_sort[i][3] == -1) and (len(approx) == 4)):
+#             cnt_is_card[i] = 1
+#         '''
+#         if ((hier_sort[i][3] == -1) and (len(approx) == 4)):
+#             cnt_is_card[i] = 1
+
+#     return cnts_sort, cnt_is_card
 
 def process_card(contour, cur_image):
     
@@ -184,4 +234,10 @@ def process_card(contour, cur_image):
     
     
     #wrap card into 200x300 flat image using perspective transform
-    querry_card.wrap = flattener(image, points, width, height)
+    querry_card.wrap = flattener(cur_image, points, width, height)
+    
+    '''
+        #todo
+    '''
+    
+    return querry_card
