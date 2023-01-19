@@ -31,6 +31,12 @@ RANK_HEIGHT = 125
 SUIT_WIDTH = 70
 SUIT_HEIGHT = 100
 
+RANK_DIFF_MAX = 2000
+SUIT_DIFF_MAX = 700
+
+CARD_MAX_AREA = 120000
+CARD_MIN_AREA = 25000
+
 def load_ranks(path):
     train_ranks = []
     i = 0
@@ -269,7 +275,7 @@ def process_card(contour, cur_image):
     #find rank contour and bounding rectangle, isolate and find largest contour
     Qrank_cnts, hier = cv2.findContours(Qrank, cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
     Qrank_cnts = sorted(Qrank_cnts, key=cv2.contourArea,reverse=True)
-
+    cv2.drawContours(cur_image, Qrank_cnts, -1, (0, 255, 0), 2)
     #find bounding rectangle for largest contour, use it to resize query rank
     #image to match dimensions of the train rank image
     if len(Qrank_cnts) != 0:
@@ -291,3 +297,51 @@ def process_card(contour, cur_image):
 
 
     return querry_card
+
+def match_card(query_card, train_ranks, train_suits):
+    """Find best match of rank and suit for querried card.
+    Find difference of training images and cards isolated suit and rank.
+    Return suit and rank that has smallest difference."""
+
+    best_rank_diff = 10000
+    best_suit_diff = 10000
+    best_rank_name_match = "Unknown"
+    best_suit_name_match = "Unknown"
+
+    #If querried card has no contours, its image size is zero and process is skipped leaving card Unknown
+    if (len(query_card.suit_img) != 0) and (len(query_card.rank_img) != 0):
+        
+        # Find difference of querried card rank from each of training rank images
+        # Store best match
+        for train_rank in train_ranks:
+
+                diff_img = cv2.absdiff(query_card.rank_img, train_rank.image)
+                rank_diff = int(np.sum(diff_img)/255)
+                
+                if rank_diff < best_rank_diff:
+                    #best_rank_diff_img = diff_img
+                    best_rank_diff = rank_diff
+                    best_rank_name = train_rank.name
+
+        # Same for the cards suit
+        for train_suit in train_suits:
+                diff_img = cv2.absdiff(query_card.suit_img, train_suit.image)
+                suit_diff = int(np.sum(diff_img)/255)
+                
+                if suit_diff < best_suit_diff:
+                    #best_suit_diff_img = diff_img
+                    best_suit_diff = suit_diff
+                    best_suit_name = train_suit.name
+
+    # Combine best rank match and best suit match to get query card's identity.
+    # If the best matches have too high of a difference value, card identity
+    # is still Unknown
+
+    if (best_rank_diff < RANK_DIFF_MAX):
+        best_rank_name_match = best_rank_name
+
+    if (best_suit_diff < SUIT_DIFF_MAX):
+        best_suit_name_match = best_suit_name
+
+    # Return classification of the card, and how big is the difference from compared image
+    return best_rank_name_match, best_suit_name_match, best_rank_diff, best_suit_diff

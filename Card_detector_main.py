@@ -63,6 +63,8 @@ while quit_cam == 0:
             if(contour_is_card[i] == 1):
                 cards.append(Card_detector_functions.process_card(contour_sort[i], cur_image))
                 
+                cards[c].best_rank_match,cards[c].best_suit_match,cards[c].rank_diff,cards[c].suit_diff = Card_detector_functions.match_card(cards[c],tranin_ranks,train_suits)
+
                 cv2.imshow("Detected card", cards[-1].wrap)
                 '''
                     match card funct #TODO
