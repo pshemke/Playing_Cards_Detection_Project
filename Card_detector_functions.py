@@ -12,7 +12,7 @@ import Card_detector_classes
 static variables
 '''
 #adaptive threshold
-BKG_TRESHOLD = 60
+BKG_TRESHOLD = 130
 CARD_THRESHOLD = 30
 
 #size of cards
@@ -183,51 +183,6 @@ def find_card(pre_processed_frame):
     
     return contours_sort, contours_is_card
 
-# def find_card(thresh_image):
-#     """Finds all card-sized contours in a thresholded camera image.
-#     Returns the number of cards, and a list of card contours sorted
-#     from largest to smallest."""
-
-#     # Find contours and sort their indices by contour size
-#     cnts,hier = cv2.findContours(thresh_image,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-#     index_sort = sorted(range(len(cnts)), key=lambda i : cv2.contourArea(cnts[i]),reverse=True)
-
-#     # If there are no contours, do nothing
-#     if len(cnts) == 0:
-#         return [], []
-    
-#     # Otherwise, initialize empty sorted contour and hierarchy lists
-#     cnts_sort = []
-#     hier_sort = []
-#     cnt_is_card = np.zeros(len(cnts),dtype=int)
-
-#     # Fill empty lists with sorted contour and sorted hierarchy. Now,
-#     # the indices of the contour list still correspond with those of
-#     # the hierarchy list. The hierarchy array can be used to check if
-#     # the contours have parents or not.
-#     for i in index_sort:
-#         cnts_sort.append(cnts[i])
-#         hier_sort.append(hier[0][i])
-
-#     # Determine which of the contours are cards by applying the
-#     # following criteria: 1) Smaller area than the maximum card size,
-#     # 2), bigger area than the minimum card size, 3) have no parents,
-#     # and 4) have four corners
-
-#     for i in range(len(cnts_sort)):
-#         size = cv2.contourArea(cnts_sort[i])
-#         peri = cv2.arcLength(cnts_sort[i],True)
-#         approx = cv2.approxPolyDP(cnts_sort[i],0.01*peri,True)
-#         '''
-#         if ((size < CARD_MAX_AREA) and (size > CARD_MIN_AREA)
-#             and (hier_sort[i][3] == -1) and (len(approx) == 4)):
-#             cnt_is_card[i] = 1
-#         '''
-#         if ((hier_sort[i][3] == -1) and (len(approx) == 4)):
-#             cnt_is_card[i] = 1
-
-#     return cnts_sort, cnt_is_card
-
 def process_card(contour, cur_image):
     
     #inicjalize new instance of Query_card
@@ -275,7 +230,8 @@ def process_card(contour, cur_image):
     #find rank contour and bounding rectangle, isolate and find largest contour
     Qrank_cnts, hier = cv2.findContours(Qrank, cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
     Qrank_cnts = sorted(Qrank_cnts, key=cv2.contourArea,reverse=True)
-    cv2.drawContours(cur_image, Qrank_cnts, -1, (0, 255, 0), 2)
+    cv2.drawContours(cur_image, Qrank_cnts, -1, (0, 255, 0), 2) #TODO tobe removed in develop
+    
     #find bounding rectangle for largest contour, use it to resize query rank
     #image to match dimensions of the train rank image
     if len(Qrank_cnts) != 0:
