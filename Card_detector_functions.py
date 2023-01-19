@@ -23,6 +23,14 @@ CARD_AREA_MIN = 10000
 CORNER_WIDTH = 32
 CORNER_HEIGHT = 84
 
+# Dimensions of rank train images
+RANK_WIDTH = 70
+RANK_HEIGHT = 125
+
+# Dimensions of suit train images
+SUIT_WIDTH = 70
+SUIT_HEIGHT = 100
+
 def load_ranks(path):
     train_ranks = []
     i = 0
@@ -243,8 +251,43 @@ def process_card(contour, cur_image):
     #wrap card into 200x300 flat image using perspective transform
     querry_card.wrap = flattener(cur_image, points, width, height)
     
-    '''
-        #todo
-    '''
+    #get corner of card image and do a 4x zoom
+    Qcorner = querry_card.wrap[0:CORNER_HEIGHT, 0:CORNER_WIDTH]
+    Qcorner_zoom = cv2.resize(Qcorner, (0,0), fx=4, fy=4)
+
+    #sample white pixel density to find appropriate threshold level
+    white_level = Qcorner_zoom[15,int((CORNER_WIDTH*4)/2)]
+    thresh_level = white_level - CARD_THRESHOLD
+    if (thresh_level <= 0):
+        thresh_level = 1
+    retval, query_thresh = cv2.threshold(Qcorner_zoom, thresh_level, 255, cv2. THRESH_BINARY_INV)
     
+    #split into top (rank) and bottom (suit)
+    Qrank = query_thresh[20:185, 0:128]
+    Qsuit = query_thresh[186:336, 0:128]
+
+    #find rank contour and bounding rectangle, isolate and find largest contour
+    Qrank_cnts, hier = cv2.findContours(Qrank, cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    Qrank_cnts = sorted(Qrank_cnts, key=cv2.contourArea,reverse=True)
+
+    #find bounding rectangle for largest contour, use it to resize query rank
+    #image to match dimensions of the train rank image
+    if len(Qrank_cnts) != 0:
+        x1,y1,w1,h1 = cv2.boundingRect(Qrank_cnts[0])
+        Qrank_roi = Qrank[y1:y1+h1, x1:x1+w1]
+        Qrank_sized = cv2.resize(Qrank_roi, (RANK_WIDTH,RANK_HEIGHT), 0, 0)
+        querry_card.rank_img = Qrank_sized
+    #find suit contour and bounding rectangle, isolate and find largest contour
+    Qsuit_cnts, hier = cv2.findContours(Qsuit, cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    Qsuit_cnts = sorted(Qsuit_cnts, key=cv2.contourArea,reverse=True)
+    
+    #find bounding rectangle for largest contour, use it to resize query suit
+    #image to match dimensions of the train suit image
+    if len(Qsuit_cnts) != 0:
+        x2,y2,w2,h2 = cv2.boundingRect(Qsuit_cnts[0])
+        Qsuit_roi = Qsuit[y2:y2+h2, x2:x2+w2]
+        Qsuit_sized = cv2.resize(Qsuit_roi, (SUIT_WIDTH, SUIT_HEIGHT), 0, 0)
+        querry_card.suit_img = Qsuit_sized
+
+
     return querry_card
