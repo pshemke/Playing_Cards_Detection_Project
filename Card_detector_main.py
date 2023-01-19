@@ -27,8 +27,8 @@ freq = cv2.getTickFrequency()
 font = cv2.FONT_HERSHEY_SIMPLEX #TODO (maybe if we want to change font)
 
 #start the camera 0 for build in camera, 1 for USB camera
-#video_stream = Video.Camera_stream((camera_width, camera_height), frames_per_sec_for_camera, 0).start()
-video_stream = Video.Camera_stream((camera_width, camera_height), frames_per_sec_for_camera, 1).start()
+video_stream = Video.Camera_stream((camera_width, camera_height), frames_per_sec_for_camera, 0).start()
+#video_stream = Video.Camera_stream((camera_width, camera_height), frames_per_sec_for_camera, 1).start()
 time.sleep(1)
 
 # load train rank and suit images
@@ -66,11 +66,8 @@ while quit_cam == 0:
                 cards[c].best_rank_match,cards[c].best_suit_match,cards[c].rank_diff,cards[c].suit_diff = Card_detector_functions.match_card(cards[c],tranin_ranks,train_suits)
 
                 cv2.imshow("Detected card", cards[-1].wrap)
-                '''
-                    match card funct #TODO
-                    draw result funct #TODO
-                '''
-                
+
+                image = Card_detector_functions.draw_results(cur_image, cards[c])
                 c += 1
     
         #draw 

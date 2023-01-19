@@ -12,7 +12,7 @@ import Card_detector_classes
 static variables
 '''
 #adaptive threshold
-BKG_TRESHOLD = 130
+BKG_TRESHOLD = 60
 CARD_THRESHOLD = 30
 
 #size of cards
@@ -36,6 +36,8 @@ SUIT_DIFF_MAX = 700
 
 CARD_MAX_AREA = 120000
 CARD_MIN_AREA = 25000
+
+font = cv2.FONT_HERSHEY_DUPLEX 
 
 def load_ranks(path):
     train_ranks = []
@@ -301,3 +303,22 @@ def match_card(query_card, train_ranks, train_suits):
 
     # Return classification of the card, and how big is the difference from compared image
     return best_rank_name_match, best_suit_name_match, best_rank_diff, best_suit_diff
+
+def draw_results(cur_image, query_card):
+    """Draw rank, suit, center and contour of a card"""
+
+    #Mark center of the card
+    x = query_card.center[0]
+    y = query_card.center[1]
+    cv2.circle(cur_image,(x,y),5,(255,0,0),-1)
+
+    rank_name = query_card.best_rank_match
+    suit_name = query_card.best_suit_match
+
+    # draw letters with black outline
+    cv2.putText(cur_image,(rank_name+' of'),(x-60,y-10),font,1,(0,0,0),3,cv2.LINE_AA)
+    cv2.putText(cur_image,(rank_name+' of'),(x-60,y-10),font,1,(50,200,200),2,cv2.LINE_AA)
+
+    cv2.putText(cur_image,suit_name,(x-60,y+25),font,1,(0,0,0),3,cv2.LINE_AA)
+    cv2.putText(cur_image,suit_name,(x-60,y+25),font,1,(50,200,200),2,cv2.LINE_AA)
+    return cur_image
