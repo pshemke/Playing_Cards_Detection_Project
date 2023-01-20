@@ -23,6 +23,10 @@ CARD_AREA_MIN = 10000
 CORNER_WIDTH = 32
 CORNER_HEIGHT = 84
 
+#offset of corner data from corner point of the card 
+OFFSET_HEIGHT = 5
+OFFSET_WIDTH = 0
+
 # Dimensions of rank train images
 RANK_WIDTH = 70
 RANK_HEIGHT = 125
@@ -214,8 +218,9 @@ def process_card(contour, cur_image):
     #wrap card into 200x300 flat image using perspective transform
     querry_card.wrap = flattener(cur_image, points, width, height)
     
+    
     #get corner of card image and do a 4x zoom
-    Qcorner = querry_card.wrap[0:CORNER_HEIGHT, 0:CORNER_WIDTH]
+    Qcorner = querry_card.wrap[0+OFFSET_HEIGHT:CORNER_HEIGHT+OFFSET_HEIGHT, 0+OFFSET_WIDTH:CORNER_WIDTH+OFFSET_WIDTH]
     Qcorner_zoom = cv2.resize(Qcorner, (0,0), fx=4, fy=4)
 
     #sample white pixel density to find appropriate threshold level
@@ -232,7 +237,6 @@ def process_card(contour, cur_image):
     #find rank contour and bounding rectangle, isolate and find largest contour
     Qrank_cnts, hier = cv2.findContours(Qrank, cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
     Qrank_cnts = sorted(Qrank_cnts, key=cv2.contourArea,reverse=True)
-    cv2.drawContours(cur_image, Qrank_cnts, -1, (0, 255, 0), 2) #TODO tobe removed in develop
     
     #find bounding rectangle for largest contour, use it to resize query rank
     #image to match dimensions of the train rank image
@@ -277,7 +281,6 @@ def match_card(query_card, train_ranks, train_suits):
                 rank_diff = int(np.sum(diff_img)/255)
                 
                 if rank_diff < best_rank_diff:
-                    #best_rank_diff_img = diff_img
                     best_rank_diff = rank_diff
                     best_rank_name = train_rank.name
 
@@ -287,7 +290,6 @@ def match_card(query_card, train_ranks, train_suits):
                 suit_diff = int(np.sum(diff_img)/255)
                 
                 if suit_diff < best_suit_diff:
-                    #best_suit_diff_img = diff_img
                     best_suit_diff = suit_diff
                     best_suit_name = train_suit.name
 

@@ -24,7 +24,7 @@ frames_per_sec_calc = 1
 freq = cv2.getTickFrequency()
 
 #define font
-font = cv2.FONT_HERSHEY_SIMPLEX #TODO (maybe if we want to change font)
+font = cv2.FONT_HERSHEY_SIMPLEX
 
 #start the camera 0 for build in camera, 1 for USB camera
 video_stream = Video.Camera_stream((camera_width, camera_height), frames_per_sec_for_camera, 0).start()
@@ -50,8 +50,6 @@ while quit_cam == 0:
     timer1 = cv2.getTickCount()
     
     pre_processed_img = Card_detector_functions.preprocess_frame(cur_image)
-    cv2.imshow("Preprocessed frame", pre_processed_img) #TODO tobe removed in develop
-    
     
     contour_sort, contour_is_card= Card_detector_functions.find_card(pre_processed_img)
     
@@ -64,8 +62,6 @@ while quit_cam == 0:
                 cards.append(Card_detector_functions.process_card(contour_sort[i], cur_image))
                 
                 cards[c].best_rank_match,cards[c].best_suit_match,cards[c].rank_diff,cards[c].suit_diff = Card_detector_functions.match_card(cards[c],tranin_ranks,train_suits)
-
-                cv2.imshow("Detected card", cards[-1].wrap)
 
                 image = Card_detector_functions.draw_results(cur_image, cards[c])
                 c += 1
